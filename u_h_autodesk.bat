@@ -44,4 +44,4 @@ del ping_result.txt
 del %temp_file%
 
 echo Operacion completada.
-pause
+
