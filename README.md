@@ -10,53 +10,63 @@ Este documento describe cómo configurar un script BAT para que se ejecute con p
 6. Reemplaza una IP específica en el archivo `hosts`.
 7. Limpia los archivos temporales generados durante la ejecución.
 
-## Contenido del Script
+# Instrucciones para Ejecutar un Script BAT como Administrador al Iniciar Windows 10
 
-```batch
-@echo off
-setlocal enabledelayedexpansion
+Para que tu script BAT se ejecute como administrador al iniciar Windows 10, puedes seguir estos pasos:
 
-REM Realiza el ping y guarda la salida en un archivo temporal
-ping -n 1 -4 autodesk.lasalleflorida.edu.ar > ping_result.txt
+## Crear una Tarea Programada en el Programador de Tareas de Windows
 
-REM Extrae la dirección IP de la salida del ping
-set "ip_address="
-for /f "tokens=2 delims=[]" %%A in ('findstr /i "Haciendo ping" ping_result.txt') do (
-    set "ip_address=%%A"
-)
+Esta es la manera más confiable de asegurarse de que el script se ejecute con privilegios de administrador al iniciar el sistema.
 
-REM Verifica que se haya obtenido una dirección IP
-if not defined ip_address (
-    echo No se pudo obtener la direccion IP.
-    goto end
-)
+### Pasos Detallados
 
-REM Muestra la IP obtenida
-echo Direccion IP obtenida: %ip_address%
+1. **Guardar tu script BAT en una ubicación segura**:
+   - Por ejemplo, `C:\Scripts\u_h_autodesk.bat`.
 
-REM Ruta al archivo hosts
-set "hosts_file=%SystemRoot%\System32\drivers\etc\hosts"
+2. **Crear una Tarea Programada**:
+   - Abre el Programador de Tareas. Puedes buscar "Programador de Tareas" en el menú Inicio.
+   - En el panel derecho, selecciona "Crear tarea".
 
-REM Realiza una copia de seguridad del archivo hosts
-copy %hosts_file% %hosts_file%.bak
+3. **Configuración General**:
+   - En la pestaña "General", asigna un nombre a la tarea, por ejemplo, "Ejecutar Script al Inicio".
+   - Marca la casilla "Ejecutar con los privilegios más altos".
 
-REM Reemplaza la IP en el archivo hosts
-set "temp_file=%temp%\hosts_temp"
-(for /f "tokens=1,2* delims= " %%A in (%hosts_file%) do (
-    if /i "%%B"=="AUTODESKSERVER" (
-        echo %ip_address% %%B %%C
-    ) else (
-        echo %%A %%B %%C
-    )
-)) > %temp_file%
+4. **Configuración de Disparadores**:
+   - Ve a la pestaña "Desencadenadores" y haz clic en "Nuevo".
+   - En el menú "Iniciar la tarea", selecciona "Al iniciar sesión" o "Al iniciar" dependiendo de cuándo quieres que se ejecute.
+   - Configura cualquier otro detalle necesario y haz clic en "Aceptar".
 
-REM Sobrescribe el archivo hosts con el archivo temporal
-copy /y %temp_file% %hosts_file%
+5. **Configuración de Acciones**:
+   - Ve a la pestaña "Acciones" y haz clic en "Nuevo".
+   - En "Acción", selecciona "Iniciar un programa".
+   - En "Programa o script", navega hasta la ubicación de tu script BAT, por ejemplo, `C:\Scripts\u_h_autodesk.bat`.
+   - Haz clic en "Aceptar".
 
-:end
-REM Limpia archivos temporales
-del ping_result.txt
-del %temp_file%
+6. **Configuración de Condiciones y Configuración**:
+   - Ve a las pestañas "Condiciones" y "Configuración" y ajusta cualquier otra opción según tus necesidades. Por ejemplo, puedes desmarcar "Iniciar la tarea solo si el equipo está en corriente alterna" si deseas que se ejecute siempre.
 
-echo Operacion completada.
-pause
+7. **Guardar la tarea**:
+   - Haz clic en "Aceptar" para crear la tarea.
+
+### Ejemplo de cómo se vería
+
+- **General**:
+  - Nombre: `Ejecutar Script al Inicio`
+  - Usuario: `SYSTEM` (o tu usuario específico)
+  - `Ejecutar con los privilegios más altos` marcado.
+
+- **Desencadenadores**:
+  - `Al iniciar` o `Al iniciar sesión`
+
+- **Acciones**:
+  - `Iniciar un programa`
+  - Programa/script: `C:\Scripts\u_h_autodesk.bat`
+
+### Comprobación
+
+Para asegurarte de que funciona correctamente:
+- Reinicia tu computadora.
+- Verifica que tu script BAT se ha ejecutado correctamente y que ha realizado las acciones esperadas (por ejemplo, modificó el archivo `hosts`).
+
+Este método utiliza el Programador de Tareas para asegurar que el script se ejecute con privilegios de administrador sin necesidad de intervención manual cada vez que inicias el sistema.
+
