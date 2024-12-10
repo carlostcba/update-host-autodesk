@@ -23,25 +23,30 @@ REM Ruta al archivo hosts
 set "hosts_file=%SystemRoot%\System32\drivers\etc\hosts"
 
 REM Realiza una copia de seguridad del archivo hosts
-copy %hosts_file% %hosts_file%.bak
+copy "%hosts_file%" "%hosts_file%.bak"
 
-REM Reemplaza la IP en el archivo hosts
+REM Crea un archivo temporal para la nueva versión del archivo hosts
 set "temp_file=%temp%\hosts_temp"
-(for /f "tokens=1,2* delims= " %%A in (%hosts_file%) do (
-    if /i "%%B"=="AUTODESKSERVER" (
-        echo %ip_address% %%B %%C
-    ) else (
-        echo %%A %%B %%C
+> "%temp_file%" (
+    for /f "tokens=*" %%A in ('type "%hosts_file%"') do (
+        set "line=%%A"
+        echo !line! | findstr /i "AUTODESKSERVER" >nul
+        if not errorlevel 1 (
+            REM Reemplaza la línea que contiene AUTODESKSERVER con un solo espacio
+            echo %ip_address% AUTODESKSERVER
+        ) else (
+            REM Copia la línea tal cual si no coincide
+            echo %%A
+        )
     )
-)) > %temp_file%
+)
 
 REM Sobrescribe el archivo hosts con el archivo temporal
-copy /y %temp_file% %hosts_file%
+copy /y "%temp_file%" "%hosts_file%"
 
 :end
 REM Limpia archivos temporales
 del ping_result.txt
-del %temp_file%
+del "%temp_file%"
 
 echo Operacion completada.
-
