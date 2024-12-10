@@ -5,16 +5,21 @@ import re
 import ctypes
 import sys
 
-def run_as_admin():
-    """Comprueba y solicita permisos de administrador si no los tiene."""
+def is_admin():
+    """Verifica si el script se está ejecutando con permisos de administrador."""
     try:
-        is_admin = ctypes.windll.shell32.IsUserAnAdmin()
+        return ctypes.windll.shell32.IsUserAnAdmin()
     except:
-        is_admin = False
-    if not is_admin:
-        print("El script necesita ejecutarse como administrador.")
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-        exit()
+        return False
+
+def restart_as_admin():
+    """Reinicia el script con permisos de administrador."""
+    if not is_admin():
+        print("El script necesita ejecutarse como administrador. Reiniciando...")
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, __file__, None, 1
+        )
+        sys.exit()
 
 def ping_host():
     """Realiza un ping y devuelve la IP si se encuentra."""
@@ -25,7 +30,7 @@ def ping_host():
         return match.group(1)
     else:
         print("No se pudo obtener la dirección IP.")
-        exit()
+        sys.exit()
 
 def backup_hosts_file(hosts_file):
     """Crea una copia de seguridad del archivo hosts."""
@@ -46,7 +51,7 @@ def update_hosts_file(hosts_file, ip_address):
     print("Archivo hosts actualizado correctamente.")
 
 def main():
-    run_as_admin()
+    restart_as_admin()  # Asegura que el script tenga permisos de administrador
     ip_address = ping_host()
     print(f"Dirección IP obtenida: {ip_address}")
     
