@@ -1,72 +1,37 @@
-# Ejecución de Script BAT al Iniciar Windows 10 con Privilegios de Administrador
+# Agente de Actualización de Host Autodesk (Plug & Play)
 
-Este documento describe cómo configurar un script BAT para que se ejecute con privilegios de administrador al iniciar Windows 10 utilizando el Programador de Tareas de Windows. El script realiza las siguientes acciones:
+Este proyecto reemplaza el antiguo script `.bat` por un agente de Python compilado (`.exe`) que se encarga de actualizar el archivo `hosts` con la IP del servidor de Autodesk de forma totalmente automática y silenciosa.
 
-1. Realiza un ping a `autodesk.lasalleflorida.edu.ar` y guarda la salida en un archivo temporal.
-2. Extrae la dirección IP de la salida del ping.
-3. Verifica que se haya obtenido una dirección IP.
-4. Muestra la dirección IP obtenida.
-5. Realiza una copia de seguridad del archivo `hosts`.
-6. Reemplaza una IP específica en el archivo `hosts`.
-7. Limpia los archivos temporales generados durante la ejecución.
+## Características
 
-# Instrucciones para Ejecutar un Script BAT como Administrador al Iniciar Windows 10
+- **Auto-Desplegable**: El mismo ejecutable se encarga de su propia instalación la primera vez que se corre.
+- **Persistencia Robusta**: Se configura como una Tarea Programada de Windows que se activa **al iniciar el sistema (onstart)**, sin depender de que un usuario inicie sesión.
+- **Privilegios Elevados**: Se ejecuta bajo la cuenta `SYSTEM`, lo que le otorga permisos totales para modificar el archivo `hosts` sin mostrar avisos de UAC al usuario.
+- **Modo Silencioso**: Funciona en segundo plano sin ventana de consola.
 
-Para que tu script BAT se ejecute como administrador al iniciar Windows 10, puedes seguir estos pasos:
+## Instalación (Paso Único)
 
-## Crear una Tarea Programada en el Programador de Tareas de Windows
+Diseñado para ser utilizado por personal de IT de nivel 1 o para ser incluido en imágenes clonadas:
 
-Esta es la manera más confiable de asegurarse de que el script se ejecute con privilegios de administrador al iniciar el sistema.
+1. Copia el archivo **`dist\update_host.exe`** en la PC destino.
+2. Ejecútalo **una sola vez** como Administrador.
+3. El programa realizará lo siguiente:
+   - Se copiará a la ubicación permanente: `C:\ProgramData\AutodeskHostConnector\update_host.exe`.
+   - Creará la tarea programada "AutodeskHostConnector".
+   - Se ejecutará por primera vez para actualizar el host.
 
-### Pasos Detallados
+## Funcionamiento Técnico
 
-1. **Guardar tu script BAT en una ubicación segura**:
-   - Por ejemplo, `C:\Scripts\u_h_autodesk.bat`.
+El agente realiza las siguientes tareas en cada arranque:
+1. Resuelve la dirección IP de `autodesk.lasalleflorida.edu.ar`.
+2. Realiza una copia de seguridad de `C:\Windows\System32\drivers\etc\hosts` como `hosts.bak`.
+3. Busca la etiqueta `AUTODESKSERVER` en el archivo `hosts` y actualiza la línea con la nueva IP. Si no existe, la añade al final.
 
-2. **Crear una Tarea Programada**:
-   - Abre el Programador de Tareas. Puedes buscar "Programador de Tareas" en el menú Inicio.
-   - En el panel derecho, selecciona "Crear tarea".
+## Verificación
 
-3. **Configuración General**:
-   - En la pestaña "General", asigna un nombre a la tarea, por ejemplo, "Ejecutar Script al Inicio".
-   - Marca la casilla "Ejecutar con los privilegios más altos".
+Para confirmar que el agente está operativo:
+- **Archivo Hosts**: Abre `C:\Windows\System32\drivers\etc\hosts` y verifica la línea de `AUTODESKSERVER`.
+- **Tarea Programada**: Abre el "Programador de Tareas" de Windows y busca la tarea `AutodeskHostConnector`. Debe estar configurada para ejecutarse "Al iniciar el sistema" con "Privilegios más altos".
 
-4. **Configuración de Disparadores**:
-   - Ve a la pestaña "Desencadenadores" y haz clic en "Nuevo".
-   - En el menú "Iniciar la tarea", selecciona "Al iniciar sesión" o "Al iniciar" dependiendo de cuándo quieres que se ejecute.
-   - Configura cualquier otro detalle necesario y haz clic en "Aceptar".
-
-5. **Configuración de Acciones**:
-   - Ve a la pestaña "Acciones" y haz clic en "Nuevo".
-   - En "Acción", selecciona "Iniciar un programa".
-   - En "Programa o script", navega hasta la ubicación de tu script BAT, por ejemplo, `C:\Scripts\u_h_autodesk.bat`.
-   - Haz clic en "Aceptar".
-
-6. **Configuración de Condiciones y Configuración**:
-   - Ve a las pestañas "Condiciones" y "Configuración" y ajusta cualquier otra opción según tus necesidades. Por ejemplo, puedes desmarcar "Iniciar la tarea solo si el equipo está en corriente alterna" si deseas que se ejecute siempre.
-
-7. **Guardar la tarea**:
-   - Haz clic en "Aceptar" para crear la tarea.
-
-### Ejemplo de cómo se vería
-
-- **General**:
-  - Nombre: `Ejecutar Script al Inicio`
-  - Usuario: `SYSTEM` (o tu usuario específico)
-  - `Ejecutar con los privilegios más altos` marcado.
-
-- **Desencadenadores**:
-  - `Al iniciar` o `Al iniciar sesión`
-
-- **Acciones**:
-  - `Iniciar un programa`
-  - Programa/script: `C:\Scripts\u_h_autodesk.bat`
-
-### Comprobación
-
-Para asegurarte de que funciona correctamente:
-- Reinicia tu computadora.
-- Verifica que tu script BAT se ha ejecutado correctamente y que ha realizado las acciones esperadas (por ejemplo, modificó el archivo `hosts`).
-
-Este método utiliza el Programador de Tareas para asegurar que el script se ejecute con privilegios de administrador sin necesidad de intervención manual cada vez que inicias el sistema.
-
+---
+*Desarrollado para optimizar el despliegue y mantenimiento de los hosts de Autodesk.*
